@@ -27,6 +27,7 @@ function getUnfulfilled({ prompts, config }) {
 function answers(options = {}) {
     const {
         name = pkg.name,
+        prompts = [],
         args = process.argv.slice(2)
     } = options;
     const rc = Rc(name, {});
@@ -34,11 +35,10 @@ function answers(options = {}) {
     const argv = minimist(args);
     const argx = expander(argv);
     const config = composer(rcx, argx);
-    const prompts = result(options, 'prompts', []);
     const unfulfilled = getUnfulfilled({ prompts, config });
     let pendingAnswers;
     if (prompts.length) {
-        pendingAnswers = inquirer(unfulfilled);
+        pendingAnswers = inquirer.prompt(unfulfilled);
     } else {
         pendingAnswers = Promise.resolve({});
     }
