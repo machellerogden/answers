@@ -19,10 +19,11 @@
   "dependencies": {
     "bluebird": "^3.5.0",
     "inquirer": "^3.0.6",
+    "keypather": "^2.0.1",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "parent-module": "^0.1.0",
-    "rc": "^1.2.1",
+    "rc-lite": "^1.2.1",
     "read-pkg-up": "^2.0.0"
   },
   "devDependencies": {

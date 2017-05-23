@@ -3,28 +3,38 @@
 
 const Promise = require('bluebird');
 const inquirer = require('inquirer');
-const _ = require('lodash');
-const argv = require('minimist')(process.argv.slice(2));
+const reduce = require('lodash/reduce');
+const isEmpty = require('lodash/isEmpty');
+const result = require('lodash/result');
+const minimist = require('minimist');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
 const pkg = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg;
-const Rc = require('rc');
+const Rc = require('rc-lite');
+const expander = require('./lib/expander');
+const composer = require('./lib/composer');
 
 function getUnfulfilled({ prompts, config }) {
-    return _.reduce(prompts, (acc, prompt) => {
-        if (_.isEmpty(_.result(config, prompt.name))) {
+    return reduce(prompts, (acc, prompt) => {
+        if (isEmpty(result(config, prompt.name))) {
             acc.push(prompt);
         }
         return acc;
     }, []);
 }
 
-function answers(options) {
-    const ns = options.name || pkg.name;
-    const rc = Rc(ns, {});
-    const config = _.assign({}, rc, argv);
-    const prompts = _.result(options, 'prompts', []);
+function answers(options = {}) {
+    const {
+        name = pkg.name,
+        args = process.argv.slice(2)
+    } = options;
+    const rc = Rc(name, {});
+    const rcx = expander(rc);
+    const argv = minimist(args);
+    const argx = expander(argv);
+    const config = composer(rcx, argx);
+    const prompts = result(options, 'prompts', []);
     const unfulfilled = getUnfulfilled({ prompts, config });
     let pendingAnswers;
     if (prompts.length) {
@@ -32,7 +42,7 @@ function answers(options) {
     } else {
         pendingAnswers = Promise.resolve({});
     }
-    return pendingAnswers.then((responses) =>  _.assign(config, responses));
+    return pendingAnswers.then((responses) =>  composer(config, responses));
 }
 
 module.exports = answers;
