@@ -6,12 +6,11 @@ const inquirer = require('inquirer');
 const reduce = require('lodash/reduce');
 const isEmpty = require('lodash/isEmpty');
 const result = require('lodash/result');
-const minimist = require('minimist');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
 const pkg = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg;
-const Rc = require('rc-lite');
+const Rc = require('./rc');
 const expander = require('./lib/expander');
 const composer = require('./lib/composer');
 
@@ -27,19 +26,15 @@ function getUnfulfilled({ prompts, config }) {
 function answers(options = {}) {
     options.name = options.name || pkg.name;
     options.prompts = options.prompts || [];
-    options.args = options.args || process.argv.slice(2);
 
     function configure(optionName, optionValue) {
         options[optionName] = optionValue;
     }
 
     function get() {
-        const { name, prompts, args } = options;
-        const rc = Rc(name, {});
-        const rcx = expander(rc);
-        const argv = minimist(args);
-        const argx = expander(argv);
-        const config = composer(rcx, argx);
+        const { name, prompts, args = null } = options;
+        const rc = Rc(name, {}, args);
+        const config = expander(rc);
         const unfulfilled = getUnfulfilled({ prompts, config });
 
         let pendingAnswers;

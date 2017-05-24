@@ -23,7 +23,6 @@
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "parent-module": "^0.1.0",
-    "rc-lite": "^1.2.1",
     "read-pkg-up": "^2.0.0"
   },
   "devDependencies": {
