@@ -25,24 +25,43 @@ function getUnfulfilled({ prompts, config }) {
 }
 
 function answers(options = {}) {
-    const {
-        name = pkg.name,
-        prompts = [],
-        args = process.argv.slice(2)
-    } = options;
-    const rc = Rc(name, {});
-    const rcx = expander(rc);
-    const argv = minimist(args);
-    const argx = expander(argv);
-    const config = composer(rcx, argx);
-    const unfulfilled = getUnfulfilled({ prompts, config });
-    let pendingAnswers;
-    if (prompts.length) {
-        pendingAnswers = inquirer.prompt(unfulfilled);
-    } else {
-        pendingAnswers = Promise.resolve({});
+    options.name = options.name || pkg.name;
+    options.prompts = options.prompts || [];
+    options.args = options.args || process.argv.slice(2);
+
+    function configure(optionName, optionValue) {
+        options[optionName] = optionValue;
     }
-    return pendingAnswers.then((responses) =>  composer(config, responses));
+
+    function get() {
+        const { name, prompts, args } = options;
+        const rc = Rc(name, {});
+        const rcx = expander(rc);
+        const argv = minimist(args);
+        const argx = expander(argv);
+        const config = composer(rcx, argx);
+        const unfulfilled = getUnfulfilled({ prompts, config });
+
+        let pendingAnswers;
+
+        if (isEmpty(prompts)) {
+            pendingAnswers = Promise.resolve({});
+        } else {
+            pendingAnswers = inquirer.prompt(unfulfilled);
+        }
+
+        function compose(responses) {
+            return composer(config, responses);
+        }
+
+        return pendingAnswers
+            .then(compose);
+    }
+
+    return {
+        get,
+        configure
+    };
 }
 
 module.exports = answers;
