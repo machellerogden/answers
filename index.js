@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const reduce = require('lodash/reduce');
 const isEmpty = require('lodash/isEmpty');
+const merge = require('lodash/merge');
 const result = require('lodash/result');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
@@ -17,11 +18,10 @@ const composer = require('./lib/composer');
 function getUnfulfilled({ prompts, config }) {
     return reduce(prompts, (acc, prompt) => {
         if (isEmpty(result(config, prompt.name))) {
-            try {
-                if (prompt.when(config)) {
-                    delete prompt.when;
-                }
-            } catch (e) {}
+            if (prompt.when) {
+                const originalWhen = prompt.when;
+                prompt.when = (answers) => originalWhen(merge(config, answers));
+            }
             acc.push(prompt);
         }
         return acc;
