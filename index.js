@@ -17,6 +17,11 @@ const composer = require('./lib/composer');
 function getUnfulfilled({ prompts, config }) {
     return reduce(prompts, (acc, prompt) => {
         if (isEmpty(result(config, prompt.name))) {
+            try {
+                if (prompt.when(config)) {
+                    delete prompt.when;
+                }
+            } catch (e) {}
             acc.push(prompt);
         }
         return acc;
