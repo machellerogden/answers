@@ -1,6 +1,6 @@
 {
   "name": "answers",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Cascading Config Provider",
   "main": "index.js",
   "scripts": {
@@ -15,8 +15,8 @@
     "url": "https://github.com/machellerogden/answers.git"
   },
   "author": {
-      "name": "Mac Heller-Ogden",
-      "email": "mac@machellerogden.com"
+    "name": "Mac Heller-Ogden",
+    "email": "mac@machellerogden.com"
   },
   "license": "Apache-2.0",
   "dependencies": {
