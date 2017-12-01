@@ -14,7 +14,10 @@
     "type": "git",
     "url": "https://github.com/machellerogden/answers.git"
   },
-  "author": "",
+  "author": {
+      "name": "Mac Heller-Ogden",
+      "email": "mac@machellerogden.com"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "bluebird": "^3.5.0",
