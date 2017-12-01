@@ -7,6 +7,7 @@ const reduce = require('lodash/reduce');
 const isEmpty = require('lodash/isEmpty');
 const merge = require('lodash/merge');
 const result = require('lodash/result');
+const set = require('lodash/set');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
@@ -23,6 +24,10 @@ function getUnfulfilled({ prompts, config }) {
                 prompt.when = (answers) => originalWhen(merge(config, answers));
             }
             acc.push(prompt);
+        } else {
+            if (prompt.filter) {
+                set(config, prompt.name, prompt.filter(result(config, prompt.name)));
+            }
         }
         return acc;
     }, []);
