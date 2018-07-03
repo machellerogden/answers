@@ -45,7 +45,6 @@ function answers(options = {}) {
         const { name, prompts, args = null } = options;
         const rc = Rc(name, args);
         const config = expander(rc);
-        console.log(JSON.stringify(config, null, 4));
         const unfulfilled = getUnfulfilled({ prompts, config });
 
         let pendingAnswers;
