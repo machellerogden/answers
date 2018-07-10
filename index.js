@@ -42,8 +42,8 @@ function answers(options = {}) {
     }
 
     function get() {
-        const { name, prompts, args = null } = options;
-        const rc = Rc(name, args);
+        const { name, prompts, argv = null } = options;
+        const rc = Rc(name, argv);
         const config = expander(rc);
         const unfulfilled = getUnfulfilled({ prompts, config });
 
