@@ -42,7 +42,7 @@ function Rc(name, argv) {
 }
 
 function reduceConfig(acc, file) {
-    if (acc.configFiles.indexOf(file) >= 0) return;
+    if (acc.configFiles.indexOf(file) >= 0) return acc;
     const fileConfig = utils.file(file);
     if (fileConfig) {
         acc.configs.push(utils.parse(fileConfig));
