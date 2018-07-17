@@ -2,7 +2,7 @@
 
 module.exports = Rc;
 
-const minimist = require('minimist');
+const minimist = require('./minimist');
 const utils = require('./lib/utils');
 const join = require('path').join;
 const composer = require('./lib/composer');

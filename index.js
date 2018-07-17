@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 'use strict';
 
-const Promise = require('bluebird');
 const inquirer = require('inquirer');
 const reduce = require('lodash/reduce');
 const isEmpty = require('lodash/isEmpty');
@@ -13,6 +12,7 @@ const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
 const pkg = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg;
 const Rc = require('./rc');
+const minimist = require('./minimist');
 const expander = require('./lib/expander');
 const composer = require('./lib/composer');
 
@@ -68,5 +68,18 @@ function answers(options = {}) {
         configure
     };
 }
+
+/**
+ * TODO: remove this. it shouldn't be here. ultimately, I need to work on
+ * removing minimist dependency, and extracting expander and composer from this
+ * package. In the meantime, I'm making the problem worse by exporting some
+ * very ugly internals which i need in another project. the things we do in the
+ * name of working software...
+ */
+answers.deepSet = (obj, keypath, value) => {
+    /* eslint-disable-next-line */
+    const { _, ...m } = minimist([ `--${keypath}`, value ]);
+    return expander(composer({}, obj, m));
+};
 
 module.exports = answers;
