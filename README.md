@@ -27,4 +27,4 @@ Much of the config sourcing code was originally taken from Dominic Tarr's [rc](h
 
 ## License
 
-Apache-2.0
+Apache-2.0q

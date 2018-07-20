@@ -26,7 +26,8 @@
     "lodash": "^4.17.10",
     "parent-module": "^0.1.0",
     "read-pkg-up": "^3.0.0",
-    "strip-json-comments": "^2.0.1"
+    "strip-json-comments": "^2.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.6",
