@@ -82,4 +82,9 @@ answers.deepSet = (obj, keypath, value) => {
     return expander(composer({}, obj, m));
 };
 
+/**
+ * TODO: break this into a separate package
+ */
+answers.composer = require('./lib/composer');
+
 module.exports = answers;
