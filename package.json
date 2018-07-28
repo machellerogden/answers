@@ -1,6 +1,6 @@
 {
   "name": "answers",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "Cascading Config Provider",
   "main": "index.js",
   "scripts": {
