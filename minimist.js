@@ -1,7 +1,7 @@
 /**
  *
  * Note: Temporarily copying minimist to the project in preparation for removing
- * the dependency. License remains intact for this file for now:
+ * the dependency.
  *
  * This software is released under the MIT license:
  *

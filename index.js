@@ -12,9 +12,7 @@ const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
 const { name:pkgName = 'answers' } = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg || {};
 const Rc = require('./rc');
-const minimist = require('./minimist');
-const expander = require('./lib/expander');
-const composer = require('./lib/composer');
+const { process, deepmerge } = require('sugarmerge');
 
 function getUnfulfilled({ prompts, config }) {
     return reduce(prompts, (acc, prompt) => {
@@ -44,7 +42,7 @@ function answers(options = {}) {
     function get() {
         const { name, prompts, argv = null } = options;
         const rc = Rc(name, argv);
-        const config = expander(rc);
+        const config = process(rc);
         const unfulfilled = getUnfulfilled({ prompts, config });
 
         let pendingAnswers;
@@ -56,7 +54,7 @@ function answers(options = {}) {
         }
 
         function compose(responses) {
-            return composer(config, responses);
+            return deepmerge(config, responses);
         }
 
         return pendingAnswers
@@ -68,24 +66,5 @@ function answers(options = {}) {
         configure
     };
 }
-
-/**
- * TODO: remove this. it shouldn't be here. ultimately, I need to work on
- * removing minimist dependency, and extracting expander and composer from this
- * package. In the meantime, I'm making the problem worse by exporting some
- * very ugly internals which i need in another project. the things we do in the
- * name of working software...
- */
-answers.deepSet = (obj, keypath, value) => {
-    /* eslint-disable-next-line */
-    const { _, ...m } = minimist([ `--${keypath}`, value ]);
-    return expander(composer({}, obj, m));
-};
-
-/**
- * TODO: break this into a separate package
- */
-answers.composer = require('./lib/composer');
-answers.expander = require('./lib/expander');
 
 module.exports = answers;

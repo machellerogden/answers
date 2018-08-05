@@ -5,7 +5,7 @@ module.exports = Rc;
 const minimist = require('./minimist');
 const utils = require('./lib/utils');
 const join = require('path').join;
-const composer = require('./lib/composer');
+const { merge } = require('sugarmerge');
 const etc = '/etc';
 const win = process.platform === 'win32';
 const home = win
@@ -33,7 +33,7 @@ function Rc(name, argv) {
         ...orArray(argv.config, [ argv.config ])
     ].reduce(reduceConfig, { configs: [], configFiles: [] });
 
-    return composer(...[
+    return merge(...[
         ...configs,
         env,
         argv,
