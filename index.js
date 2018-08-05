@@ -10,7 +10,7 @@ const set = require('lodash/set');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
-const pkg = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg;
+const { name:pkgName = 'answers' } = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg || {};
 const Rc = require('./rc');
 const minimist = require('./minimist');
 const expander = require('./lib/expander');
@@ -34,7 +34,7 @@ function getUnfulfilled({ prompts, config }) {
 }
 
 function answers(options = {}) {
-    options.name = options.name || pkg.name;
+    options.name = options.name || pkgName;
     options.prompts = options.prompts || [];
 
     function configure(optionName, optionValue) {
