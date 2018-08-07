@@ -105,7 +105,7 @@ module.exports = function (args, opts) {
             o[key].push(value);
         }
         else {
-            o[key] = [ o[key], value ];
+            o[key] = value;
         }
     }
 
