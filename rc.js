@@ -37,7 +37,7 @@ function Rc(name, argv) {
         ...configs,
         env,
         argv,
-        ...orArray(configFiles.length, [ { configs: configFiles, config: configFiles[configFiles.length - 1] } ])
+        ...orArray(configFiles.length, [ { __configs__: configFiles, __config__: configFiles[configFiles.length - 1] } ])
     ]);
 }
 
