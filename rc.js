@@ -12,9 +12,9 @@ const home = win
     ? process.env.USERPROFILE
     : process.env.HOME;
 
-function Rc(name, argv) {
+function Rc(name, argv, prefix) {
     if ('string' !== typeof name) throw new Error('name must be a string');
-    if (!argv) argv = minimist(process.argv.slice(2));
+    if (!argv) argv = minimist(process.argv.slice(2), { prefix });
     const env = utils.env(name + '_');
 
     const { configs, configFiles } = [

@@ -14,9 +14,12 @@ const { name:pkgName = 'answers' } = readPkgUp.sync({ cwd: path.dirname(parentMo
 const Rc = require('./rc');
 const { process, deepmerge } = require('sugarmerge');
 
-function getUnfulfilled({ prompts, config }) {
+function getUnfulfilled({ prompts, config, prefix }) {
+    const prefixPath = prefix
+        ? `${prefix}.`
+        : '';
     return reduce(prompts, (acc, prompt) => {
-        if (get(config, prompt.name) == null) {
+        if (get(config, `${prefixPath}${prompt.name}`) == null) {
             if (prompt.when) {
                 const originalWhen = prompt.when;
                 prompt.when = (answers) => originalWhen(merge(config, answers));
@@ -34,16 +37,15 @@ function getUnfulfilled({ prompts, config }) {
 function answers(options = {}) {
     options.name = options.name || pkgName;
     options.prompts = options.prompts || [];
-
-    function configure(optionName, optionValue) {
-        options[optionName] = optionValue;
-    }
+    options.prefix = typeof options.prefix === 'string'
+        ? options.prefix
+        : '';
 
     function get() {
-        const { name, prompts, argv = null } = options;
-        const rc = Rc(name, argv);
+        const { name, prompts, argv = null, prefix } = options;
+        const rc = Rc(name, argv, prefix);
         const config = process(rc);
-        const unfulfilled = getUnfulfilled({ prompts, config });
+        const unfulfilled = getUnfulfilled({ prompts, config, prefix });
 
         let pendingAnswers;
 
@@ -58,12 +60,14 @@ function answers(options = {}) {
         }
 
         return pendingAnswers
+            .then(a => prefix
+                ? { [prefix]: a }
+                : a)
             .then(compose);
     }
 
     return {
-        get,
-        configure
+        get
     };
 }
 

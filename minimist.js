@@ -25,16 +25,16 @@
 module.exports = function (args, opts) {
     if (!opts) opts = {};
 
-    var flags = { bools : {}, strings : {}, unknownFn: null };
+    var flags = { prefix: '', bools : {}, strings : {}, unknownFn: null };
 
-    if (typeof opts['unknown'] === 'function') {
-        flags.unknownFn = opts['unknown'];
-    }
+    if (typeof opts.prefix === 'string') flags.prefix = opts.prefix;
 
-    if (typeof opts['boolean'] === 'boolean' && opts['boolean']) {
+    if (typeof opts.unknown === 'function') flags.unknownFn = opts.unknown;
+
+    if (typeof opts.boolean === 'boolean' && opts.boolean) {
         flags.allBools = true;
     } else {
-        [].concat(opts['boolean']).filter(Boolean).forEach(function (key) {
+        [].concat(opts.boolean).filter(Boolean).forEach(function (key) {
             flags.bools[key] = true;
         });
     }
@@ -65,7 +65,7 @@ module.exports = function (args, opts) {
 
     var notFlags = [];
 
-    if (args.indexOf('--') !== -1) {
+    if (args.includes('--')) {
         notFlags = args.slice(args.indexOf('--')+1);
         args = args.slice(0, args.indexOf('--'));
     }
@@ -75,7 +75,10 @@ module.exports = function (args, opts) {
             flags.strings[key] || flags.bools[key] || aliases[key];
     }
 
-    function setArg (key, val, arg) {
+    function setArg(key, val, arg) {
+        key = flags.prefix
+            ? `${flags.prefix}.${key}`
+            : key;
         if (arg && flags.unknownFn && !argDefined(key, arg)) {
             if (flags.unknownFn(arg) === false) return;
         }
@@ -90,7 +93,7 @@ module.exports = function (args, opts) {
         });
     }
 
-    function setKey (obj, keys, value) {
+    function setKey(obj, keys, value) {
         var o = obj;
         keys.slice(0,-1).forEach(function (key) {
             if (o[key] === undefined) o[key] = {};
