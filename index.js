@@ -41,39 +41,26 @@ function answers(options = {}) {
         ? options.prefix
         : '';
 
-    function configure(optionName, optionValue) {
-        options[optionName] = optionValue;
-    }
+    const { name, argv = null, prefix } = options;
+    const rc = Rc(name, argv, prefix);
+    const config = process(rc);
 
-    function get() {
-        const { name, prompts, argv = null, prefix } = options;
-        const rc = Rc(name, argv, prefix);
-        const config = process(rc);
-        const unfulfilled = getUnfulfilled({ prompts, config, prefix });
+    function get(prompts) {
+        prompts = prompts || options.prompts;
 
-        let pendingAnswers;
-
-        if (isEmpty(prompts)) {
-            pendingAnswers = Promise.resolve({});
-        } else {
-            pendingAnswers = inquirer.prompt(unfulfilled);
-        }
-
-        function compose(responses) {
-            return deepmerge(config, responses);
-        }
+        const pendingAnswers = (isEmpty(prompts))
+            ? Promise.resolve({})
+            : inquirer.prompt(getUnfulfilled({ prompts, config, prefix }));
 
         return pendingAnswers
             .then(a => prefix
                 ? { [prefix]: a }
                 : a)
-            .then(compose);
+            .then((a) =>
+                deepmerge(config, a));
     }
 
-    return {
-        get,
-        configure
-    };
+    return { get };
 }
 
 module.exports = answers;
