@@ -41,6 +41,10 @@ function answers(options = {}) {
         ? options.prefix
         : '';
 
+    function configure(optionName, optionValue) {
+        options[optionName] = optionValue;
+    }
+
     function get() {
         const { name, prompts, argv = null, prefix } = options;
         const rc = Rc(name, argv, prefix);
@@ -67,7 +71,8 @@ function answers(options = {}) {
     }
 
     return {
-        get
+        get,
+        configure
     };
 }
 
