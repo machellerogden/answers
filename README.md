@@ -1,4 +1,4 @@
-# ![answers](./answers.svg)
+# ![answers](answers.svg?raw=true&sanitize=true)
 
 > Cascading Config Provider
 
