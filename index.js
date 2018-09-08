@@ -34,6 +34,17 @@ function getUnfulfilled({ prompts, config, prefix }) {
     }, []);
 }
 
+const Prefix = (prefix, prompts) => prompts.map((prompt) => {
+        const name = `${prefix ? `${prefix}.` : ''}${prompt.name}`;
+        prompt.name = name;
+        if (typeof prompt.when === 'function') {
+            const originalWhen = prompt.when;
+            const when = (answers) => originalWhen(answers[prefix]);
+            prompt.when = when;
+        }
+        return prompt;
+    });
+
 function answers(options = {}) {
     options.name = options.name || pkgName;
     options.prompts = options.prompts || [];
@@ -46,16 +57,13 @@ function answers(options = {}) {
     const config = process(rc);
 
     function get(prompts) {
-        prompts = prompts || options.prompts;
+        prompts = Prefix(prefix, prompts || options.prompts);
 
         const pendingAnswers = (isEmpty(prompts))
             ? Promise.resolve({})
             : inquirer.prompt(getUnfulfilled({ prompts, config, prefix }));
 
         return pendingAnswers
-            .then(a => prefix
-                ? { [prefix]: a }
-                : a)
             .then((a) =>
                 deepmerge(config, a));
     }
