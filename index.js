@@ -8,10 +8,6 @@ const merge = require('lodash/merge');
 const get = require('lodash/get');
 const set = require('lodash/set');
 const has = require('lodash/has');
-const path = require('path');
-const readPkgUp = require('read-pkg-up');
-const parentModule = require('parent-module')();
-const { name:pkgName = 'answers' } = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg || {};
 const Rc = require('./rc');
 const { process:p, deepmerge } = require('sugarmerge');
 
@@ -47,7 +43,7 @@ const Prefix = (prefix, prompts) => prompts.map((prompt) => {
     });
 
 function Answers(options = {}) {
-    options.name = options.name || pkgName;
+    options.name = options.name || 'answers';
     options.prompts = options.prompts || [];
     options.prefix = typeof options.prefix === 'string'
         ? options.prefix
