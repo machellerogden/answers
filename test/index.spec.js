@@ -66,14 +66,18 @@ describe('answers', () => {
                         }
                     },
                     {
-                      "type": "env",
-                      "config": {}
+                        "type": "env",
+                        "config": {}
                     },
                     {
-                      "type": "argv",
-                      "config": {
-                        "anotherprop": "command-line"
-                      }
+                        "type": "argv",
+                        "config": {
+                            "anotherprop": "command-line"
+                        }
+                    },
+                    {
+                        "type": "prompt",
+                        "config": {}
                     }
                 ]
             });

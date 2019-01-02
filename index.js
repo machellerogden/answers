@@ -74,22 +74,17 @@ function Answers(options = {}) {
             : inquirer.prompt(getUnfulfilled({ prompts, config: rc.config, prefix }));
 
         return pendingAnswers
-            .then((a) => {
-                const result = {
-                    ...rc,
-                    config: deepmerge(rc.config, a)
-                };
-                if (!isEmpty(a)) {
-                    result.sources = [
-                        ...rc.sources,
-                        {
-                            type: 'prompt',
-                            config: a
-                        }
-                    ];
-                }
-                return result;
-            });
+            .then((a) => ({
+                ...rc,
+                config: deepmerge(rc.config, a),
+                sources: [
+                    ...rc.sources,
+                    {
+                        type: 'prompt',
+                        config: a
+                    }
+                ]
+            }));
     }
 
 
