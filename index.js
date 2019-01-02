@@ -12,7 +12,7 @@ const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
 const { name:pkgName = 'answers' } = readPkgUp.sync({ cwd: path.dirname(parentModule) }).pkg || {};
 const Rc = require('./rc');
-const { process, deepmerge } = require('sugarmerge');
+const { process:p, deepmerge } = require('sugarmerge');
 
 function getUnfulfilled({ prompts, config, prefix }) {
     const prefixPath = prefix
@@ -39,7 +39,7 @@ const Prefix = (prefix, prompts) => prompts.map((prompt) => {
         prompt.name = name;
         if (typeof prompt.when === 'function') {
             const originalWhen = prompt.when;
-            const when = (answers) => originalWhen(answers[prefix]);
+            const when = answers => originalWhen(answers[prefix]);
             prompt.when = when;
         }
         return prompt;
@@ -51,10 +51,16 @@ function answers(options = {}) {
     options.prefix = typeof options.prefix === 'string'
         ? options.prefix
         : '';
+    options.root = options.root || '/';
+    options.home = options.home || (process.platform === 'win32'
+        ? process.env.USERPROFILE
+        : process.env.HOME);
+    options.cwd = options.cwd || process.cwd();
 
-    const { name, argv = null, prefix } = options;
-    const rc = Rc(name, argv, prefix);
-    const config = process(rc);
+    const { name, argv = null, prefix, root, home, cwd } = options;
+    const rc = Rc(name, argv, prefix, root, home, cwd);
+    const config = p(rc);
+    config.__sources__ = rc.__sources__;
 
     function get(prompts) {
         prompts = Prefix(prefix, prompts || options.prompts);

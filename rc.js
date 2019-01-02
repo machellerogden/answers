@@ -8,44 +8,56 @@ const join = require('path').join;
 const { merge } = require('sugarmerge');
 const etc = '/etc';
 const win = process.platform === 'win32';
-const home = win
-    ? process.env.USERPROFILE
-    : process.env.HOME;
 
-function Rc(name, argv, prefix) {
+function Rc(name, argv, prefix, root = '/', homePath, cwdPath) {
     if ('string' !== typeof name) throw new Error('name must be a string');
-    if (!argv) argv = minimist(process.argv.slice(2), { prefix });
+    argv = minimist((argv
+        ? argv
+        : process.argv.slice(2)), { prefix });
     const env = utils.env(name + '_');
+    const home = homePath
+        ? homePath
+        : win
+            ? process.env.USERPROFILE
+            : process.env.HOME;
+    const cwd = cwdPath || process.cwd();
 
-    const { configs, configFiles } = [
+    const { sources, configs, configFiles } = [
         ...orArray(!win, [
-            join(etc, name, 'config'),
-            join(etc, name + 'rc')
+            join(root, etc, name, 'config'),
+            join(root, etc, name + 'rc')
         ]),
         ...orArray(home, [
-            join(home, '.config', name, 'config'),
-            join(home, '.config', name),
-            join(home, '.' + name, 'config'),
-            join(home, '.' + name + 'rc')
+            join(root, home, '.config', name, 'config'),
+            join(root, home, '.config', name),
+            join(root, home, '.' + name, 'config'),
+            join(root, home, '.' + name + 'rc')
         ]),
-        utils.find(`.${name}rc`),
+        utils.find(cwd)(`.${name}rc`),
         ...orArray(env.config, [ env.config ]),
         ...orArray(argv.config, [ argv.config ])
-    ].reduce(reduceConfig, { configs: [], configFiles: [] });
+    ].reduce(reduceConfig, { sources: {}, configs: [], configFiles: [] });
 
-    return merge(...[
+    const result = merge({}, ...[
         ...configs,
         env,
-        argv,
-        ...orArray(configFiles.length, [ { __configs__: configFiles, __config__: configFiles[configFiles.length - 1] } ])
+        argv
     ]);
+
+    if (configFiles.length) {
+        result.__sources__ = sources;
+    }
+
+    return result;
 }
 
 function reduceConfig(acc, file) {
     if (acc.configFiles.indexOf(file) >= 0) return acc;
     const fileConfig = utils.file(file);
     if (fileConfig) {
-        acc.configs.push(utils.parse(fileConfig));
+        const c = utils.parse(fileConfig);
+        acc.sources[file] = c;
+        acc.configs.push(c);
         acc.configFiles.push(file);
     }
     return acc;
