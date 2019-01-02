@@ -43,19 +43,27 @@ const Prefix = (prefix, prompts) => prompts.map((prompt) => {
     });
 
 function Answers(options = {}) {
+
     options.name = options.name || 'answers';
+
     options.prompts = options.prompts || [];
+
     options.prefix = typeof options.prefix === 'string'
         ? options.prefix
         : '';
+
     options.root = options.root || '/';
+
     options.home = options.home || (process.platform === 'win32'
         ? process.env.USERPROFILE
         : process.env.HOME);
+
     options.cwd = options.cwd || process.cwd();
 
     const { name, argv = null, prefix, root, home, cwd } = options;
+
     const rc = Rc({ name, argv, prefix, root, home, cwd });
+
     rc.config = p(rc.config);
 
     function get(prompts) {
@@ -66,8 +74,10 @@ function Answers(options = {}) {
             : inquirer.prompt(getUnfulfilled({ prompts, config: rc.config, prefix }));
 
         return pendingAnswers
-            .then((a) =>
-                deepmerge(rc, a));
+            .then((a) => ({
+                ...rc,
+                config: deepmerge(rc.config, a)
+            }));
     }
 
 
