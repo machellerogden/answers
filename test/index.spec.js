@@ -16,36 +16,91 @@ describe('answers', () => {
         sandbox = sinon.sandbox.create();
     });
 
-    it('new', () => {
+    it('the basics work', () => {
+
+        const name = 'foo';
         const root = path.join(__dirname, 'fixtures');
         const home = path.normalize('/Users/jdoe');
         const cwd = path.join(root, home, 'test-project');
+        const argv = [ '--anotherprop', 'command-line', 'bar', '--', '--qux', 'xyzzy' ];
+
         return Answers({
-            name: 'foo',
+            name,
             root,
             home,
             cwd,
-            argv: [ 'bar', '--', 'qux' ]
+            argv
         }).get().then(config => {
             return expect(config).to.eql({
                 "--": [
-                    "qux"
+                    "--qux",
+                    "xyzzy"
                 ],
                 "_": [
                     "bar"
                 ],
-                "__sources__": {
-                    [path.join(process.cwd(), "test/fixtures/Users/jdoe/.foorc")]: {
-                        "someprop": "user"
-                    },
-                    [path.join(process.cwd(), "test/fixtures/Users/jdoe/test-project/.foorc")]: {
-                        "someprop": "local"
-                    },
-                    [path.join(process.cwd(), "test/fixtures/etc/foorc")]: {
-                        "someprop": "system"
-                    }
+                "config": {
+                    "anotherprop": "command-line",
+                    "someprop": "local"
                 },
-                someprop: "local"
+                "sources": [
+                    {
+                        "source": path.join(process.cwd(), "test/fixtures/etc/foorc"),
+                        "type": "file",
+                        "config": {
+                            "someprop": "system"
+                        }
+                    },
+                    {
+                        "source": path.join(process.cwd(), "test/fixtures/Users/jdoe/.foorc"),
+                        "type": "file",
+                        "config": {
+                            "someprop": "user"
+                        }
+                    },
+                    {
+                        "source": path.join(process.cwd(), "test/fixtures/Users/jdoe/test-project/.foorc"),
+                        "type": "file",
+                        "config": {
+                            "someprop": "local"
+                        }
+                    },
+                    {
+                      "type": "env",
+                      "config": {}
+                    },
+                    {
+                      "type": "argv",
+                      "config": {
+                        "anotherprop": "command-line"
+                      }
+                    }
+                ]
+            });
+        });
+    });
+
+    it('can know source of prop', () => {
+
+        const name = 'foo';
+        const root = path.join(__dirname, 'fixtures');
+        const home = path.normalize('/Users/jdoe');
+        const cwd = path.join(root, home, 'test-project');
+        const argv = [ '--anotherprop', 'command-line', 'bar', '--', '--qux', 'xyzzy' ];
+
+        return Answers({
+            name,
+            root,
+            home,
+            cwd,
+            argv
+        }).get().then(config => {
+            return expect(Answers.source('someprop', config)).to.eql({
+                "source": path.join(process.cwd(), "test/fixtures/Users/jdoe/test-project/.foorc"),
+                "type": 'file',
+                "config": {
+                    "someprop": "local"
+                }
             });
         });
     });

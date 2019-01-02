@@ -7,6 +7,7 @@ const isEmpty = require('lodash/isEmpty');
 const merge = require('lodash/merge');
 const get = require('lodash/get');
 const set = require('lodash/set');
+const has = require('lodash/has');
 const path = require('path');
 const readPkgUp = require('read-pkg-up');
 const parentModule = require('parent-module')();
@@ -22,7 +23,7 @@ function getUnfulfilled({ prompts, config, prefix }) {
         if (get(config, `${prefixPath}${prompt.name}`) == null) {
             if (prompt.when) {
                 const originalWhen = prompt.when;
-                prompt.when = (answers) => originalWhen(merge(config, answers));
+                prompt.when = answers => originalWhen(merge(config, answers));
             }
             acc.push(prompt);
         } else {
@@ -45,7 +46,7 @@ const Prefix = (prefix, prompts) => prompts.map((prompt) => {
         return prompt;
     });
 
-function answers(options = {}) {
+function Answers(options = {}) {
     options.name = options.name || pkgName;
     options.prompts = options.prompts || [];
     options.prefix = typeof options.prefix === 'string'
@@ -58,23 +59,32 @@ function answers(options = {}) {
     options.cwd = options.cwd || process.cwd();
 
     const { name, argv = null, prefix, root, home, cwd } = options;
-    const rc = Rc(name, argv, prefix, root, home, cwd);
-    const config = p(rc);
-    config.__sources__ = rc.__sources__;
+    const rc = Rc({ name, argv, prefix, root, home, cwd });
+    rc.config = p(rc.config);
 
     function get(prompts) {
         prompts = Prefix(prefix, prompts || options.prompts);
 
         const pendingAnswers = (isEmpty(prompts))
             ? Promise.resolve({})
-            : inquirer.prompt(getUnfulfilled({ prompts, config, prefix }));
+            : inquirer.prompt(getUnfulfilled({ prompts, config: rc.config, prefix }));
 
         return pendingAnswers
             .then((a) =>
-                deepmerge(config, a));
+                deepmerge(rc, a));
     }
+
 
     return { get };
 }
 
-module.exports = answers;
+Answers.source = (prop, config = {}) => {
+    return (config.sources || []).reverse().reduce((acc, c) => {
+        if (acc) return acc;
+        return has(c.config, prop)
+            ? c
+            : null;
+    }, null);
+};
+
+module.exports = Answers;

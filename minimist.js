@@ -58,7 +58,7 @@ module.exports = function (args, opts) {
 
     var defaults = opts['default'] || {};
 
-    var argv = { _ : [] };
+    var argv = { _ : [], config: {} };
     Object.keys(flags.bools).forEach(function (key) {
         setArg(key, defaults[key] === undefined ? false : defaults[key]);
     });
@@ -86,10 +86,10 @@ module.exports = function (args, opts) {
         var value = !flags.strings[key] && isNumber(val)
             ? Number(val) : val
         ;
-        setKey(argv, key.split('.'), value);
+        setKey(argv.config, key.split('.'), value);
 
         (aliases[key] || []).forEach(function (x) {
-            setKey(argv, x.split('.'), value);
+            setKey(argv.config, x.split('.'), value);
         });
     }
 
@@ -221,11 +221,11 @@ module.exports = function (args, opts) {
     }
 
     Object.keys(defaults).forEach(function (key) {
-        if (!hasKey(argv, key.split('.'))) {
-            setKey(argv, key.split('.'), defaults[key]);
+        if (!hasKey(argv.config, key.split('.'))) {
+            setKey(argv.config, key.split('.'), defaults[key]);
 
             (aliases[key] || []).forEach(function (x) {
-                setKey(argv, x.split('.'), defaults[key]);
+                setKey(argv.config, x.split('.'), defaults[key]);
             });
         }
     });
