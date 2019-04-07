@@ -16,24 +16,47 @@ const {
 
 const findUp = require('find-up');
 
+const ini = require('ini');
+const yaml = require('yamljs');
+const stripJsonComments = require('strip-json-comments');
+const { merge, process:p } = require('sugarmerge');
+
 async function Answers(config = {}) {
     const {
         name = 'answers',
-        loaders:customLoaders,
-        merge:customMerge
+        loaders:customLoaders = []
     } = config;
+
+    const loaders = [ ...customLoaders ];
+
     const configFilename = `.${name}rc`;
     const configPaths = [
-        await findUp(configFilename),
+        findUp(configFilename),
         path.join(home, configFilename),
+        path.join('/usr/local/etc', configFilename),
         path.join('/etc', configFilename)
     ];
-    const fileString = configPaths.some(async (filename) => {
-        const file = await readFile(filename, { encoding: 'utf8' });
-        if (file) return file;
-        return false;
-    });
-    console.log(fileString);
+
+    const fileSources = [];
+    for await (const filename of configPaths) {
+        try {
+            fileSources.push(
+                loaders.reduce((acc, loader) => loader(acc, filename),
+                parse(await readFile(filename, { encoding: 'utf8' }))));
+        } catch {}
+    }
+    console.log(merge(...fileSources));
 }
 
-Answers();
+function parse(str) {
+    if (/^\s*{/.test(str)) return JSON.parse(stripJsonComments(str));
+    try {
+        return yaml.parse(str);
+    } catch {
+        return ini.parse(str);
+    }
+}
+
+if (process.stdin.isTTY) {
+    Answers();
+}
