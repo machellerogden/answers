@@ -25,6 +25,8 @@ async function setup(fixture = defaultFixture, user = 'jane', defaults = {}, arg
 test('all available sources should be loaded', async t => {
     t.deepEqual(await setup('all-sources', 'jane'), {
         name: 'testapp',
+        '--': [],
+        _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',
         'home-config-testapp': 'home-config-testapp',
@@ -34,6 +36,8 @@ test('all available sources should be loaded', async t => {
     });
     t.deepEqual(await setup('all-sources', 'peter'), {
         name: 'testapp',
+        '--': [],
+        _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',
         'home-config-testapp-config': 'home-config-testapp-config',
@@ -46,6 +50,8 @@ test('all available sources should be loaded', async t => {
 test('merge precendence for sourced config should be in order where most locally available config is weighed strongest', async t => {
     t.deepEqual(await setup('all-sources-precedence', 'jane'), {
         name: 'testapp',
+        '--': [],
+        _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',
         'home-config-testapp': 'home-config-testapp',
@@ -61,6 +67,8 @@ test('merge precendence for sourced config should be in order where most locally
     });
     t.deepEqual(await setup('all-sources-precedence', 'peter'), {
         name: 'testapp',
+        '--': [],
+        _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',
         'home-config-testapp-config': 'home-config-testapp-config',

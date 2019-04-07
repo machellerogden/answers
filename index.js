@@ -3,7 +3,6 @@
 
 module.exports = Answers;
 
-const argv = process.argv.slice(2);
 let cwd = process.cwd();
 let home = process.platform === 'win32'
     ? process.env.USERPROFILE
@@ -23,11 +22,23 @@ const yaml = require('yamljs');
 const stripJsonComments = require('strip-json-comments');
 const { merge, process:p } = require('sugarmerge');
 
+const { isNumeric } = require('needful');
+const isFlag = v => /^-.+/.test(v);
+
+const cast = v => isNumeric(v)
+    ? +v
+    : [ 'true', 'false' ].includes(v)
+        ? v === 'true' ? true : false
+        : v;
+
+const trim = v => /^--?(.+)/.exec(v)[1];
+
 async function Answers(config = {}) {
     const {
         name = 'answers',
         loaders:customLoaders = [],
         defaults = {},
+        argv = process.argv.slice(2),
         cwd:customCwd,
         home:customHome,
         etc:customEtc
@@ -50,15 +61,31 @@ async function Answers(config = {}) {
         findUp(configFilename, { cwd })
     ];
 
-    const fileSources = [];
+    const args = { _: [], '--': [] };
+
+    let i = 0;
+    while (i < argv.length) {
+        if (isFlag(argv[i])) {
+            if (isFlag(argv[i + 1]) || argv[i + 1] == null || !argv[i + 1].length) {
+                args[trim(argv[i++])] = true;
+            } else {
+                args[trim(argv[i++])] = cast(argv[i++]);
+            }
+        } else {
+            args._.push(cast(argv[i++]));
+        }
+    }
+
+    const sources = [];
     for await (const filename of configPaths) {
         try {
-            fileSources.push(
+            sources.push(
                 loaders.reduce((acc, loader) => loader(acc, filename),
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
-    return merge(defaults, ...fileSources);
+
+    return merge(defaults, ...sources, p(args));
 }
 
 function parse(str) {
