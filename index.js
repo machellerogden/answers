@@ -61,6 +61,15 @@ async function Answers(config = {}) {
         findUp(configFilename, { cwd })
     ];
 
+    const sources = [ defaults ];
+    for await (const filename of configPaths) {
+        try {
+            sources.push(
+                loaders.reduce((acc, loader) => loader(acc, filename),
+                parse(await readFile(filename, { encoding: 'utf8' }))));
+        } catch {}
+    }
+
     const args = { _: [], '--': [] };
 
     let i = 0;
@@ -76,16 +85,9 @@ async function Answers(config = {}) {
         }
     }
 
-    const sources = [];
-    for await (const filename of configPaths) {
-        try {
-            sources.push(
-                loaders.reduce((acc, loader) => loader(acc, filename),
-                parse(await readFile(filename, { encoding: 'utf8' }))));
-        } catch {}
-    }
+    sources.push(args);
 
-    return merge(defaults, ...sources, p(args));
+    return merge(...sources.map(v => p(v)));
 }
 
 function parse(str) {
