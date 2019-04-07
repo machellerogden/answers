@@ -4,9 +4,11 @@
 module.exports = Answers;
 
 const argv = process.argv.slice(2);
-const home = process.platform === 'win32'
+let cwd = process.cwd();
+let home = process.platform === 'win32'
     ? process.env.USERPROFILE
     : process.env.HOME;
+let etc = '/usr/local/etc';
 
 const path = require('path');
 const {
@@ -24,17 +26,23 @@ const { merge, process:p } = require('sugarmerge');
 async function Answers(config = {}) {
     const {
         name = 'answers',
-        loaders:customLoaders = []
+        loaders:customLoaders = [],
+        cwd:customCwd,
+        home:customHome,
+        etc:customEtc
     } = config;
 
     const loaders = [ ...customLoaders ];
 
+    cwd = customCwd || cwd;
+    home = customHome || home;
+    etc = customEtc || etc;
+
     const configFilename = `.${name}rc`;
     const configPaths = [
-        findUp(configFilename),
+        findUp(configFilename, { cwd }),
         path.join(home, configFilename),
-        path.join('/usr/local/etc', configFilename),
-        path.join('/etc', configFilename)
+        path.join(etc, configFilename)
     ];
 
     const fileSources = [];
@@ -45,7 +53,7 @@ async function Answers(config = {}) {
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
-    console.log(merge(...fileSources));
+    return merge(...fileSources);
 }
 
 function parse(str) {
@@ -57,6 +65,8 @@ function parse(str) {
     }
 }
 
-if (process.stdin.isTTY) {
-    Answers();
+if (require.main === module) {
+    if (process.argv[2]) {
+        Answers();
+    }
 }
