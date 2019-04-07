@@ -1,0 +1,10 @@
+{
+    "name": "testapp",
+    "system-testapp-config": "system-testapp-config",
+    "a": "system-testapp-config",
+    "b": "system-testapp-config",
+    "c": "system-testapp-config",
+    "d": "system-testapp-config",
+    "e": "system-testapp-config",
+    "f": "system-testapp-config"
+}

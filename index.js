@@ -27,6 +27,7 @@ async function Answers(config = {}) {
     const {
         name = 'answers',
         loaders:customLoaders = [],
+        defaults = {},
         cwd:customCwd,
         home:customHome,
         etc:customEtc
@@ -40,9 +41,13 @@ async function Answers(config = {}) {
 
     const configFilename = `.${name}rc`;
     const configPaths = [
-        findUp(configFilename, { cwd }),
+        path.join(etc, name, 'config'),
+        path.join(etc, configFilename),
+        path.join(home, '.config', name, 'config'),
+        path.join(home, '.config', name),
+        path.join(home, `.${name}`, 'config'),
         path.join(home, configFilename),
-        path.join(etc, configFilename)
+        findUp(configFilename, { cwd })
     ];
 
     const fileSources = [];
@@ -53,7 +58,7 @@ async function Answers(config = {}) {
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
-    return merge(...fileSources);
+    return merge(defaults, ...fileSources);
 }
 
 function parse(str) {

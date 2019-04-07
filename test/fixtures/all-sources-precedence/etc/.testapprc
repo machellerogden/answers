@@ -1,0 +1,9 @@
+{
+    "name":"testapp",
+    "system-rc":"system-rc",
+    "a": "system-rc",
+    "b": "system-rc",
+    "c": "system-rc",
+    "d": "system-rc",
+    "e": "system-rc"
+}

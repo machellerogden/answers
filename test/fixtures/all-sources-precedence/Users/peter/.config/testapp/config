@@ -1,0 +1,8 @@
+{
+    "name": "testapp",
+    "home-config-testapp-config": "home-config-testapp-config",
+    "a": "home-config-testapp-config",
+    "b": "home-config-testapp-config",
+    "c": "home-config-testapp-config",
+    "d": "home-config-testapp-config"
+}
