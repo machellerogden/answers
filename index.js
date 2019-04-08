@@ -47,8 +47,7 @@ async function loadSources({ name, defaults, cwd, home, etc, loaders }) {
     for await (const filename of configPaths) {
         try {
             sources.push(
-                // TODO: support async loaders
-                loaders.reduce((acc, loader) => loader(acc, filename),
+                loaders.reduce(async (acc, loader) => await loader(acc, filename),
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
@@ -70,11 +69,23 @@ async function loadArgs({ argv, loaders }) {
         } else {
             args._.push(cast(argv[i++]));
         }
-        // TODO: support async loaders
-        args = loaders.reduce((acc, loader) => loader(acc), sugarProcess(args));
+        args = sugarProcess(args);
     }
 
-    return args;
+    return loaders.reduce(async (acc, loader) => await loader(acc), args);
+}
+
+async function loadEnv({ name, loaders }) {
+    const prefix = `${name}_`;
+    const env = Object.entries(process.env).reduce((acc, [ k, v ]) => {
+        if (k.startsWith(prefix)) {
+            let key;
+            key = k.replace(prefix, '').replace('__', '.');
+            acc[key] = v;
+        }
+        return acc;
+    }, {});
+    return loaders.reduce(async (acc, loader) => await loader(acc), sugarProcess(env));
 }
 
 async function Answers(config = {}) {
@@ -91,8 +102,9 @@ async function Answers(config = {}) {
     const sources = await loadSources({ name, defaults, cwd, home, etc, loaders });
 
     const args = await loadArgs({ argv, loaders });
+    const env = await loadEnv({ name, loaders });
 
-    return merge(...sources, args);
+    return merge(...sources, env, args);
 }
 
 function parse(str) {
