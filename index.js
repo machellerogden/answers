@@ -3,6 +3,8 @@
 
 module.exports = Answers;
 
+const edn = require('edn-to-js');
+
 let cwd = process.cwd();
 let home = process.platform === 'win32'
     ? process.env.USERPROFILE
@@ -20,7 +22,7 @@ const findUp = require('find-up');
 const ini = require('ini');
 const yaml = require('yamljs');
 const stripJsonComments = require('strip-json-comments');
-const { merge, process:p } = require('sugarmerge');
+const { merge, process:sugarProcess } = require('sugarmerge');
 
 const { isNumeric } = require('needful');
 const isFlag = v => /^-.+/.test(v);
@@ -70,7 +72,7 @@ async function Answers(config = {}) {
         } catch {}
     }
 
-    const args = { _: [], '--': [] };
+    let args = { _: [], '--': [] };
 
     let i = 0;
     while (i < argv.length) {
@@ -83,15 +85,22 @@ async function Answers(config = {}) {
         } else {
             args._.push(cast(argv[i++]));
         }
+        args = loaders.reduce((acc, loader) => loader(acc), sugarProcess(args));
     }
 
     sources.push(args);
 
-    return merge(...sources.map(v => p(v)));
+    return merge(...sources);
 }
 
 function parse(str) {
-    if (/^\s*{/.test(str)) return JSON.parse(stripJsonComments(str));
+    if (/^\s*{/.test(str)) {
+        try {
+            return edn(str);
+        } catch {
+            return JSON.parse(stripJsonComments(str));
+        }
+    }
     try {
         return yaml.parse(str);
     } catch {
@@ -100,7 +109,5 @@ function parse(str) {
 }
 
 if (require.main === module) {
-    if (process.argv[2]) {
-        Answers();
-    }
+    (async () => console.log(await Answers()))();
 }
