@@ -5,12 +5,6 @@ module.exports = Answers;
 
 const edn = require('edn-to-js');
 
-let cwd = process.cwd();
-let home = process.platform === 'win32'
-    ? process.env.USERPROFILE
-    : process.env.HOME;
-let etc = '/usr/local/etc';
-
 const path = require('path');
 const {
     readFile,
@@ -35,22 +29,7 @@ const cast = v => isNumeric(v)
 
 const trim = v => /^--?(.+)/.exec(v)[1];
 
-async function Answers(config = {}) {
-    const {
-        name = 'answers',
-        loaders:customLoaders = [],
-        defaults = {},
-        argv = process.argv.slice(2),
-        cwd:customCwd,
-        home:customHome,
-        etc:customEtc
-    } = config;
-
-    const loaders = [ ...customLoaders ];
-
-    cwd = customCwd || cwd;
-    home = customHome || home;
-    etc = customEtc || etc;
+async function loadSources({ name, defaults, cwd, home, etc, loaders }) {
 
     const configFilename = `.${name}rc`;
     const configPaths = [
@@ -64,14 +43,20 @@ async function Answers(config = {}) {
     ];
 
     const sources = [ defaults ];
+
     for await (const filename of configPaths) {
         try {
             sources.push(
+                // TODO: support async loaders
                 loaders.reduce((acc, loader) => loader(acc, filename),
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
 
+    return sources;
+}
+
+async function loadArgs({ argv, loaders }) {
     let args = { _: [], '--': [] };
 
     let i = 0;
@@ -85,12 +70,29 @@ async function Answers(config = {}) {
         } else {
             args._.push(cast(argv[i++]));
         }
+        // TODO: support async loaders
         args = loaders.reduce((acc, loader) => loader(acc), sugarProcess(args));
     }
 
-    sources.push(args);
+    return args;
+}
 
-    return merge(...sources);
+async function Answers(config = {}) {
+    const {
+        name = 'answers',
+        loaders = [],
+        defaults = {},
+        argv = process.argv.slice(2),
+        cwd = process.cwd(),
+        home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME,
+        etc = '/usr/local/etc'
+    } = config;
+
+    const sources = await loadSources({ name, defaults, cwd, home, etc, loaders });
+
+    const args = await loadArgs({ argv, loaders });
+
+    return merge(...sources, args);
 }
 
 function parse(str) {
