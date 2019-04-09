@@ -29,10 +29,10 @@ const cast = v => isNumeric(v)
 
 const trim = v => /^--?(.+)/.exec(v)[1];
 
-async function loadSources({ name, defaults, cwd, home, etc, loaders }) {
-
+const getConfigPaths = ({ name, paths }) => {
+    const { cwd, home, etc } = paths;
     const configFilename = `.${name}rc`;
-    const configPaths = [
+    return [
         path.join(etc, name, 'config'),
         path.join(etc, configFilename),
         path.join(home, '.config', name, 'config'),
@@ -41,18 +41,21 @@ async function loadSources({ name, defaults, cwd, home, etc, loaders }) {
         path.join(home, configFilename),
         findUp(configFilename, { cwd })
     ];
+}
 
-    const sources = [ defaults ];
+async function loadFiles({ name, paths, loaders }) {
+    const configPaths = getConfigPaths({ name, paths });
 
+    const files = [];
     for await (const filename of configPaths) {
         try {
-            sources.push(
+            files.push(
                 loaders.reduce(async (acc, loader) => await loader(acc, filename),
                 parse(await readFile(filename, { encoding: 'utf8' }))));
         } catch {}
     }
 
-    return sources;
+    return files;
 }
 
 async function loadArgs({ argv, loaders }) {
@@ -99,12 +102,12 @@ async function Answers(config = {}) {
         etc = '/usr/local/etc'
     } = config;
 
-    const sources = await loadSources({ name, defaults, cwd, home, etc, loaders });
-
+    const paths = { cwd, home, etc };
+    const files = await loadFiles({ name, paths, loaders });
     const args = await loadArgs({ argv, loaders });
     const env = await loadEnv({ name, loaders });
 
-    return merge(...sources, env, args);
+    return merge(defaults, ...files, env, args);
 }
 
 function parse(str) {
@@ -122,6 +125,4 @@ function parse(str) {
     }
 }
 
-if (require.main === module) {
-    (async () => console.log(await Answers()))();
-}
+if (require.main === module) (async () => console.log(await Answers()))();
