@@ -3,45 +3,58 @@
 
 module.exports = Answers;
 
-const inquirer = require('inquirer');
-const edn = require('edn-to-js');
-
 const path = require('path');
-const {
-    readFile,
-    constants
-} = require('fs').promises;
-
+const { readFile } = require('fs').promises;
 const findUp = require('find-up');
-
+const edn = require('edn-to-js');
 const ini = require('ini');
 const yaml = require('yamljs');
 const stripJsonComments = require('strip-json-comments');
+const inquirer = require('inquirer');
 const { merge, process:sugarProcess } = require('sugarmerge');
-
 const { isNumeric, has } = require('needful');
-const isFlag = v => /^-.+/.test(v);
 
-const cast = v => isNumeric(v)
-    ? +v
-    : [ 'true', 'false' ].includes(v)
-        ? v === 'true' ? true : false
-        : v;
+async function Answers(options = {}) {
+    // process options
+    const {
+        name = 'answers',
+        loaders = [],
+        defaults = {},
+        prompts = [],
+        argv = process.argv.slice(2),
+        cwd = process.cwd(),
+        home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME,
+        etc = '/usr/local/etc'
+    } = options;
+    const paths = { cwd, home, etc };
 
-const trim = v => /^--?(.+)/.exec(v)[1];
+    // source what we can
+    const files = await loadFiles({ name, paths, loaders });
+    const args = await loadArgs({ argv, loaders });
+    const env = await loadEnv({ name, loaders });
+    const config = merge(defaults, ...files, env, args);
 
-const getConfigPaths = ({ name, paths }) => {
-    const { cwd, home, etc } = paths;
-    const configFilename = `.${name}rc`;
-    return [
-        path.join(etc, name, 'config'),
-        path.join(etc, configFilename),
-        path.join(home, '.config', name, 'config'),
-        path.join(home, '.config', name),
-        path.join(home, `.${name}`, 'config'),
-        path.join(home, configFilename),
-        findUp(configFilename, { cwd })
-    ];
+    // ask user for anything missing
+    const unfulfilledPrompts = getUnfulfilled({ prompts, config });
+    const answers = sugarProcess(await inquirer.prompt(unfulfilledPrompts));
+
+    // put it all together
+    return merge(config, answers);
+}
+
+function parse(str) {
+    if (/^\s*{/.test(str)) {
+        try {
+            return edn(str);
+        } catch {
+            return JSON.parse(stripJsonComments(str));
+        }
+    }
+    try {
+        return yaml.parse(str);
+    } catch {
+        return ini.parse(str);
+    }
 }
 
 async function loadFiles({ name, paths, loaders }) {
@@ -99,44 +112,34 @@ function getUnfulfilled({ prompts, config }) {
     }, []);
 }
 
-async function Answers(options = {}) {
-    const {
-        name = 'answers',
-        loaders = [],
-        defaults = {},
-        prompts = [],
-        argv = process.argv.slice(2),
-        cwd = process.cwd(),
-        home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME,
-        etc = '/usr/local/etc'
-    } = options;
-
-    const paths = { cwd, home, etc };
-    const files = await loadFiles({ name, paths, loaders });
-    const args = await loadArgs({ argv, loaders });
-    const env = await loadEnv({ name, loaders });
-
-    const config = merge(defaults, ...files, env, args);
-
-    const unfulfilledPrompts = getUnfulfilled({ prompts, config });
-    const answers = sugarProcess(await inquirer.prompt(unfulfilledPrompts));
-
-    return merge(config, answers);
+function getConfigPaths({ name, paths }) {
+    const { cwd, home, etc } = paths;
+    const configFilename = `.${name}rc`;
+    return [
+        path.join(etc, name, 'config'),
+        path.join(etc, configFilename),
+        path.join(home, '.config', name, 'config'),
+        path.join(home, '.config', name),
+        path.join(home, `.${name}`, 'config'),
+        path.join(home, configFilename),
+        findUp(configFilename, { cwd })
+    ];
 }
 
-function parse(str) {
-    if (/^\s*{/.test(str)) {
-        try {
-            return edn(str);
-        } catch {
-            return JSON.parse(stripJsonComments(str));
-        }
-    }
-    try {
-        return yaml.parse(str);
-    } catch {
-        return ini.parse(str);
-    }
+function cast(v) {
+    return isNumeric(v)
+        ? +v
+        : [ 'true', 'false' ].includes(v)
+            ? v === 'true' ? true : false
+            : v;
+}
+
+function trim(v) {
+    return /^--?(.+)/.exec(v)[1];
+}
+
+function isFlag(v) {
+    return /^-.+/.test(v);
 }
 
 if (require.main === module) (async () => console.log(await Answers()))();
