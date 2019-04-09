@@ -3,6 +3,7 @@
 
 module.exports = Answers;
 
+const inquirer = require('inquirer');
 const edn = require('edn-to-js');
 
 const path = require('path');
@@ -18,7 +19,7 @@ const yaml = require('yamljs');
 const stripJsonComments = require('strip-json-comments');
 const { merge, process:sugarProcess } = require('sugarmerge');
 
-const { isNumeric } = require('needful');
+const { isNumeric, has } = require('needful');
 const isFlag = v => /^-.+/.test(v);
 
 const cast = v => isNumeric(v)
@@ -91,23 +92,36 @@ async function loadEnv({ name, loaders }) {
     return loaders.reduce(async (acc, loader) => await loader(acc), sugarProcess(env));
 }
 
-async function Answers(config = {}) {
+function getUnfulfilled({ prompts, config }) {
+    return prompts.reduce((acc, prompt) => {
+        if (!has(config, prompt.name)) acc.push(prompt);
+        return acc;
+    }, []);
+}
+
+async function Answers(options = {}) {
     const {
         name = 'answers',
         loaders = [],
         defaults = {},
+        prompts = [],
         argv = process.argv.slice(2),
         cwd = process.cwd(),
         home = process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME,
         etc = '/usr/local/etc'
-    } = config;
+    } = options;
 
     const paths = { cwd, home, etc };
     const files = await loadFiles({ name, paths, loaders });
     const args = await loadArgs({ argv, loaders });
     const env = await loadEnv({ name, loaders });
 
-    return merge(defaults, ...files, env, args);
+    const config = merge(defaults, ...files, env, args);
+
+    const unfulfilledPrompts = getUnfulfilled({ prompts, config });
+    const answers = sugarProcess(await inquirer.prompt(unfulfilledPrompts));
+
+    return merge(config, answers);
 }
 
 function parse(str) {
