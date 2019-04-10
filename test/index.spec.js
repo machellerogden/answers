@@ -48,7 +48,8 @@ test('all available sources should be loaded', async t => {
 });
 
 test('merge precendence for sourced config should be in order where most locally available config is weighed strongest', async t => {
-    t.deepEqual(await setup('all-sources-precedence', 'jane'), {
+    const argv = [ '--load-order[+]', 'command-line' ];
+    t.deepEqual(await setup('all-sources-precedence', 'jane', {}, argv), {
         name: 'testapp',
         '--': [],
         _: [],
@@ -63,9 +64,18 @@ test('merge precendence for sourced config should be in order where most locally
         c: 'home-testapp-config',
         d: 'home-config-testapp',
         e: 'system-rc',
-        f: 'system-testapp-config'
+        f: 'system-testapp-config',
+        "load-order": [
+            'system-testapp-config',
+            'system-rc',
+            'home-config-testapp',
+            'home-testapp-config',
+            'home-rc',
+            'project-rc',
+            'command-line'
+        ]
     });
-    t.deepEqual(await setup('all-sources-precedence', 'peter'), {
+    t.deepEqual(await setup('all-sources-precedence', 'peter', {}, argv), {
         name: 'testapp',
         '--': [],
         _: [],
@@ -80,6 +90,54 @@ test('merge precendence for sourced config should be in order where most locally
         c: 'home-testapp-config',
         d: 'home-config-testapp-config',
         e: 'system-rc',
-        f: 'system-testapp-config'
+        f: 'system-testapp-config',
+        "load-order": [
+            'system-testapp-config',
+            'system-rc',
+            'home-config-testapp-config',
+            'home-testapp-config',
+            'home-rc',
+            'project-rc',
+            'command-line'
+        ]
+    });
+});
+
+test('config can be edn, json, yaml or ini', async t => {
+    t.deepEqual(await setup('mixed-types', 'jane'), {
+        name: 'testapp',
+        '--': [],
+        _: [],
+        'project-rc': 'project-rc',
+        'home-rc': 'home-rc',
+        'home-config-testapp': 'home-config-testapp',
+        'home-testapp-config': 'home-testapp-config',
+        'system-rc': 'system-rc',
+        'system-testapp-config': 'system-testapp-config',
+        types: [
+            'edn',
+            'edn',
+            'yaml',
+            'json',
+            'ini'
+        ]
+    });
+    t.deepEqual(await setup('mixed-types', 'peter'), {
+        name: 'testapp',
+        '--': [],
+        _: [],
+        'project-rc': 'project-rc',
+        'home-rc': 'home-rc',
+        'home-config-testapp-config': 'home-config-testapp-config',
+        'home-testapp-config': 'home-testapp-config',
+        'system-rc': 'system-rc',
+        'system-testapp-config': 'system-testapp-config',
+        types: [
+            'edn',
+            'edn',
+            'ini',
+            'json',
+            'yaml'
+        ]
     });
 });

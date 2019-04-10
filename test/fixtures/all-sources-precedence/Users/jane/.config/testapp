@@ -4,5 +4,6 @@
     "a": "home-config-testapp",
     "b": "home-config-testapp",
     "c": "home-config-testapp",
-    "d": "home-config-testapp"
+    "d": "home-config-testapp",
+    "load-order[+]": "home-config-testapp"
 }

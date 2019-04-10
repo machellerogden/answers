@@ -1,0 +1,5 @@
+{
+    "name": "testapp",
+    "home-testapp-config":"home-testapp-config",
+    "types[+]": "json"
+}

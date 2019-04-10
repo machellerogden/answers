@@ -2,5 +2,6 @@
     "name": "testapp",
     "home-rc": "home-rc",
     "a": "home-rc",
-    "b": "home-rc"
+    "b": "home-rc",
+    "load-order[+]": "home-rc"
 }

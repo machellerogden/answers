@@ -1,0 +1,3 @@
+name: testapp
+home-config-testapp: home-config-testapp
+types[+]: yaml

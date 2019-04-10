@@ -6,5 +6,6 @@
     "c": "system-testapp-config",
     "d": "system-testapp-config",
     "e": "system-testapp-config",
-    "f": "system-testapp-config"
+    "f": "system-testapp-config",
+    "load-order[+]": "system-testapp-config"
 }

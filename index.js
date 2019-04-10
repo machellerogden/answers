@@ -4,18 +4,23 @@
 module.exports = Answers;
 
 const path = require('path');
-const { readFile } = require('fs').promises;
+const { promisify, inspect } = require('util');
+const readFile = promisify(require('fs').readFile);
 const findUp = require('find-up');
-const edn = require('edn-to-js');
-const ini = require('ini');
-const yaml = require('yamljs');
-const stripJsonComments = require('strip-json-comments');
+
 const inquirer = require('inquirer');
 const { merge, process:sugarProcess } = require('sugarmerge');
 const { isNumeric, has } = require('needful');
 
+const edn = require('edn-to-js');
+const { parse:json } = JSON;
+const { parse:yaml } = require('yamljs');
+const { parse:ini } = require('ini');
+const parsers = { edn, json, yaml, ini };
+const stripJsonComments = require('strip-json-comments');
+
 async function Answers(options = {}) {
-    // process options
+    // default options
     const {
         name = 'answers',
         loaders = [],
@@ -28,13 +33,13 @@ async function Answers(options = {}) {
     } = options;
     const paths = { cwd, home, etc };
 
-    // source what we can
-    const files = await loadFiles({ name, paths, loaders });
-    const args = await loadArgs({ argv, loaders });
+    // load config sources
+    const base = await loadFileConfig({ name, paths, loaders });
+    const runtime = await loadArgvConfig({ base, argv, loaders });
     const env = await loadEnv({ name, loaders });
-    const config = merge(defaults, ...files, env, args);
+    const config = merge(defaults, env, runtime);
 
-    // ask user for anything missing
+    // prompt user for missing config
     const unfulfilledPrompts = getUnfulfilled({ prompts, config });
     const answers = sugarProcess(await inquirer.prompt(unfulfilledPrompts));
 
@@ -42,22 +47,31 @@ async function Answers(options = {}) {
     return merge(config, answers);
 }
 
-function parse(str) {
+function parse(str, filename) {
+    let data;
+    const _parse = type => {
+        debug(`attemping ${type} parse of ${filename}`);
+        data = parsers[type](str);
+        debug(`successfully parsed ${filename} as ${type}`);
+    };
     if (/^\s*{/.test(str)) {
         try {
-            return edn(str);
+            _parse('edn');
         } catch {
-            return JSON.parse(stripJsonComments(str));
+            _parse('json');
+        }
+    } else {
+        try {
+            _parse('yaml');
+        } catch {
+            _parse('ini');
         }
     }
-    try {
-        return yaml.parse(str);
-    } catch {
-        return ini.parse(str);
-    }
+    if (data == null) debug('unable to load config for', filename);
+    return data;
 }
 
-async function loadFiles({ name, paths, loaders }) {
+async function loadFileConfig({ name, paths, loaders }) {
     const configPaths = getConfigPaths({ name, paths });
 
     const files = [];
@@ -65,15 +79,15 @@ async function loadFiles({ name, paths, loaders }) {
         try {
             files.push(
                 loaders.reduce(async (acc, loader) => await loader(acc, filename),
-                parse(await readFile(filename, { encoding: 'utf8' }))));
+                parse(await readFile(filename, { encoding: 'utf8' }), filename)));
         } catch {}
     }
 
-    return files;
+    return merge(...files);
 }
 
-async function loadArgs({ argv, loaders }) {
-    let args = { _: [], '--': [] };
+async function loadArgvConfig({ base, argv, loaders }) {
+    let args = { _: [], '--': [], ...base };
 
     let i = 0;
     while (i < argv.length) {
@@ -141,5 +155,13 @@ function trim(v) {
 function isFlag(v) {
     return /^-.+/.test(v);
 }
+
+function debug(...args) {
+    return process.env.ANSWERS_DEBUG
+        && console.debug(...args.map(v => typeof v === 'object'
+            ? inspect(v, { depth: null, colors: true })
+            : v));
+}
+
 
 if (require.main === module) (async () => console.log(await Answers()))();

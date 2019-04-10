@@ -1,0 +1,3 @@
+{:name "testapp"
+ :system-testapp-config "system-testapp-config"
+ "types[+]" "edn"}
