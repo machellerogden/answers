@@ -48,10 +48,10 @@ test('all available sources should be loaded', async t => {
 });
 
 test('merge precendence for sourced config should be in order where most locally available config is weighed strongest', async t => {
-    const argv = [ '--load-order[+]', 'command-line' ];
+    const argv = [ '--load-order[+]', 'command-line', '--', 'do-not-parse[+]', 'true', '123' ];
     t.deepEqual(await setup('all-sources-precedence', 'jane', {}, argv), {
         name: 'testapp',
-        '--': [],
+        '--': [ 'do-not-parse[+]', 'true', '123' ],
         _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',
@@ -77,7 +77,7 @@ test('merge precendence for sourced config should be in order where most locally
     });
     t.deepEqual(await setup('all-sources-precedence', 'peter', {}, argv), {
         name: 'testapp',
-        '--': [],
+        '--': [ 'do-not-parse[+]', 'true', '123' ],
         _: [],
         'project-rc': 'project-rc',
         'home-rc': 'home-rc',

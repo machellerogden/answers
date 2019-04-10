@@ -90,7 +90,17 @@ async function loadArgvConfig({ base, argv, loaders }) {
     let args = { _: [], '--': [], ...base };
 
     let i = 0;
+    let end = false;
     while (i < argv.length) {
+        if (argv[i] === '--') {
+            end = true;
+            i++;
+            continue;
+        }
+        if (end) {
+            args['--'].push(argv[i++]);
+            continue;
+        }
         if (isFlag(argv[i])) {
             if (isFlag(argv[i + 1]) || argv[i + 1] == null || !argv[i + 1].length) {
                 args[trim(argv[i++])] = true;
