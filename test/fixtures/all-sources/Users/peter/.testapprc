@@ -1,1 +1,4 @@
-{"name":"testapp","home-rc":"home-rc"}
+{
+    "name": "testapp",
+    "home-rc": "home-rc"
+}

@@ -1,1 +1,4 @@
-{"name":"testapp","system-rc":"system-rc"}
+{
+    "name": "testapp",
+    "system-rc": "system-rc"
+}

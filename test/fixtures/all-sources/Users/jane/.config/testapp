@@ -1,1 +1,4 @@
-{"name":"testapp","home-config-testapp":"home-config-testapp"}
+{
+    "name": "testapp",
+    "home-config-testapp": "home-config-testapp"
+}

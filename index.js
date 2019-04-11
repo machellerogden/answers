@@ -35,8 +35,8 @@ async function Answers(options = {}) {
 
     // load config sources
     const base = await loadFileConfig({ name, paths, loaders });
-    const runtime = await loadArgvConfig({ base, argv, loaders });
-    const env = await loadEnv({ name, loaders });
+    const runtime = await loadArgvConfig({ base, argv });
+    const env = await loadEnv({ name });
     const config = merge(defaults, env, runtime);
 
     // prompt user for missing config
@@ -82,11 +82,10 @@ async function loadFileConfig({ name, paths, loaders }) {
                 parse(await readFile(filename, { encoding: 'utf8' }), filename)));
         } catch {}
     }
-
-    return merge(...files);
+    return merge(...(await Promise.all(files)));
 }
 
-async function loadArgvConfig({ base, argv, loaders }) {
+async function loadArgvConfig({ base, argv }) {
     let args = { _: [], '--': [], ...base };
 
     let i = 0;
@@ -113,10 +112,10 @@ async function loadArgvConfig({ base, argv, loaders }) {
         args = sugarProcess(args);
     }
 
-    return loaders.reduce(async (acc, loader) => await loader(acc), args);
+    return args;
 }
 
-async function loadEnv({ name, loaders }) {
+async function loadEnv({ name }) {
     const prefix = `${name}_`;
     const env = Object.entries(process.env).reduce((acc, [ k, v ]) => {
         if (k.startsWith(prefix)) {
@@ -126,7 +125,7 @@ async function loadEnv({ name, loaders }) {
         }
         return acc;
     }, {});
-    return loaders.reduce(async (acc, loader) => await loader(acc), sugarProcess(env));
+    return env;
 }
 
 function getUnfulfilled({ prompts, config }) {

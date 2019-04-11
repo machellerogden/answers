@@ -1,1 +1,4 @@
-{"name":"testapp","project-rc":"project-rc"}
+{
+    "name": "testapp",
+    "project-rc": "project-rc"
+}
