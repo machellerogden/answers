@@ -21,7 +21,7 @@
     "find-up": "^3.0.0",
     "ini": "^1.3.5",
     "inquirer": "^3.3.0",
-    "needful": "^1.8.1",
+    "needful": "^1.8.2",
     "strip-json-comments": "^2.0.1",
     "sugarmerge": "^0.2.2",
     "yamljs": "^0.3.0"
