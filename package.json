@@ -23,7 +23,7 @@
     "inquirer": "^3.3.0",
     "needful": "^1.8.2",
     "strip-json-comments": "^2.0.1",
-    "sugarmerge": "^0.2.2",
+    "sugarmerge": "^0.2.4",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
