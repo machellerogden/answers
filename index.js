@@ -72,10 +72,10 @@ function parse(str, filename) {
 }
 
 async function loadFileConfig({ name, paths, loaders }) {
-    const configPaths = getConfigPaths({ name, paths });
+    const configPaths = await getConfigPaths({ name, paths });
 
     const files = [];
-    for await (const filename of configPaths) {
+    for (const filename of configPaths) {
         try {
             files.push(
                 loaders.reduce(async (acc, loader) => await loader(acc, filename),
@@ -135,18 +135,23 @@ function getUnfulfilled({ prompts, config }) {
     }, []);
 }
 
-function getConfigPaths({ name, paths }) {
+async function getConfigPaths({ name, paths }) {
     const { cwd, home, etc } = paths;
     const configFilename = `.${name}rc`;
-    return [
+    const cascade = [
         path.join(etc, name, 'config'),
         path.join(etc, configFilename),
         path.join(home, '.config', name, 'config'),
         path.join(home, '.config', name),
         path.join(home, `.${name}`, 'config'),
-        path.join(home, configFilename),
-        findUp(configFilename, { cwd })
+        path.join(home, configFilename)
     ];
+    let up = await findUp(configFilename, { cwd });
+    up = Array.isArray(up)
+        ? up
+        : [ up ];
+    up = up.filter(p => !cascade.includes(p));
+    return [ ...cascade, ...up ];
 }
 
 function cast(v) {
