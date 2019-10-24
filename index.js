@@ -54,6 +54,10 @@ function parse(str, filename) {
         data = parsers[type](str);
         debug(`successfully parsed ${filename} as ${type}`);
     };
+    // TODO
+    // this magic is insufficient -- it's brittle, error-prone and won't scale.
+    // for instance, pdn can't be added. we need to find a graceful way to allow
+    // for explicit parser declaration. via extension, annotation or otherwise.
     if (/^\s*{/.test(str)) {
         try {
             _parse('edn');
