@@ -61,13 +61,13 @@ function parse(str, filename) {
     if (/^\s*{/.test(str)) {
         try {
             _parse('edn');
-        } catch {
+        } catch (e) {
             _parse('json');
         }
     } else {
         try {
             _parse('yaml');
-        } catch {
+        } catch (e) {
             _parse('ini');
         }
     }
@@ -84,7 +84,7 @@ async function loadFileConfig({ name, paths, loaders }) {
             files.push(
                 loaders.reduce(async (acc, loader) => await loader(acc, filename),
                 parse(await readFile(filename, { encoding: 'utf8' }), filename)));
-        } catch {}
+        } catch (e) {}
     }
     return merge(...(await Promise.all(files)));
 }
